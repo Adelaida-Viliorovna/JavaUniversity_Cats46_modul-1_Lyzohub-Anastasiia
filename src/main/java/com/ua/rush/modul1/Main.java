@@ -1,8 +1,6 @@
 package com.ua.rush.modul1;
 
 import java.io.*;
-import java.io.FileReader;
-import java.io.Reader;
 import java.util.Scanner;
 
 public class Main {
@@ -17,7 +15,11 @@ public class Main {
     private void run() {
         Scanner scanner = new Scanner(System.in);
         String input = scanner.nextLine().trim();
-        if (input.length() != 0) {
+        if(input.equalsIgnoreCase("exit")) {
+            System.out.println("Exiting...");
+            return;
+        }
+        if (!input.isEmpty()) {
             commandOptions(input);
         } else {
             mainMenu();
@@ -60,7 +62,7 @@ public class Main {
                 break;
         }
     }
-    private int mainMenu() {
+    private void mainMenu() {
         System.out.println("Choose an option:");
         System.out.println("1. Encrypt a message");
         System.out.println("2. Decrypt a message");
@@ -69,7 +71,6 @@ public class Main {
         Scanner scanner = new Scanner(System.in);
         int choice = scanner.nextInt();
         chooseOption(choice);
-        return choice;
     }
     private void chooseOption(int choose) {
         String filePath;
@@ -101,14 +102,12 @@ public class Main {
     private String enterPath() {
         System.out.println("Enter path to the file:");
         Scanner scanner = new Scanner(System.in);
-        String filePath = scanner.nextLine();
-        return filePath;
+        return scanner.nextLine();
     }
     private int enterKey() {
         System.out.println("Enter key (integer):");
         Scanner scanner = new Scanner(System.in);
-        int key = scanner.nextInt();
-        return key;
+        return scanner.nextInt();
     }
     private String entryFileInPath(String filePath) {
         String[] parts = filePath.split("/");
@@ -117,13 +116,25 @@ public class Main {
         }
         return parts[parts.length - 1];
     }
-    private String newNameFile(String fileName, String operation) {
-        String newFileName = "";
-        String[] parts = fileName.split("\\.");
-        String name = parts[0];
-        String extension = parts[parts.length - 1];
-        newFileName = name + "_" + operation + "." + extension;
-        return newFileName;
+    private String newNameFile(String fileName, String operation, int key) {
+        if (fileName == null || fileName.isEmpty()) {
+            return "_[" + operation + "-" + key + "]";
+        }
+        int lastDot = fileName.lastIndexOf('.');
+        String base;
+        String ext;
+        if (lastDot == -1) {
+            base = fileName;
+            ext = "";
+        } else {
+            base = fileName.substring(0, lastDot);
+            ext = fileName.substring(lastDot);
+        }
+        int lastOpStart = base.lastIndexOf("_[");
+        if (lastOpStart != -1 && base.endsWith("]")) {
+            base = base.substring(0, lastOpStart);
+        }
+        return base + "_[" + operation + "-" + key + "]" + ext;
     }
     private String newPathFile(String filePath, String newFileName) {
             if (filePath == null || filePath.isEmpty()) {
@@ -204,7 +215,7 @@ public class Main {
     }
     private void encryptMessage(String filePath, int key) {
         String fileName = entryFileInPath(filePath);
-        String newFileName = newNameFile(fileName, "[ENCRYPTED]");
+        String newFileName = newNameFile(fileName, "ENCRYPTED", key);
         String newFilePath = newPathFile(filePath, newFileName);
         String text = "";
         try {
@@ -231,7 +242,7 @@ public class Main {
     }
     private void decryptMessage(String filePath, int key) {
         String fileName = entryFileInPath(filePath);
-        String newFileName = newNameFile(fileName, "[DECRYPTED]");
+        String newFileName = newNameFile(fileName, "DECRYPTED", key);
         String newFilePath = newPathFile(filePath, newFileName);
         String text = "";
         try {
@@ -259,7 +270,7 @@ public class Main {
     private void bruteForceDecryption(String filePath) {
         String fileName = entryFileInPath(filePath);
         int key = 0; // In a real scenario, this would be determined by the brute force process
-        String newFileName = newNameFile(fileName, "[BRUTEFORCED]" + key);
+        String newFileName = newNameFile(fileName, "BRUTEFORCED", key);
         String text = "";
         try {
             text = readFile(filePath);
