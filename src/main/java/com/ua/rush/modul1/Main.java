@@ -2,6 +2,7 @@ package com.ua.rush.modul1;
 
 import java.io.*;
 import java.util.Scanner;
+import java.util.*;
 
 public class Main {
     private final char[] UPPER_EN = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".toCharArray();
@@ -269,22 +270,76 @@ public class Main {
     }
     private void bruteForceDecryption(String filePath) {
         String fileName = entryFileInPath(filePath);
-        int key = 0; // In a real scenario, this would be determined by the brute force process
-        String newFileName = newNameFile(fileName, "BRUTEFORCED", key);
         String text = "";
         try {
             text = readFile(filePath);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        System.out.println("------------------------------");
-        System.out.println("Brute force decrypting file " + fileName + " at " + filePath);
-        System.out.println("New file name: " + newFileName);
-        System.out.println("New file path: " + newPathFile(filePath, newFileName));
-        System.out.println("File content: " + text);
-
-        System.out.println("------------------------------");
-
+        int maxAlpha = Math.max(UPPER_EN.length, UPPER_UA.length);
+        class Candidate { int key; String plain; int score; String langGuess; }
+        List<Candidate> candidates = new java.util.ArrayList<>();
+        for (int k = 0; k < maxAlpha; k++) {
+            String plain = shiftText(text, -k);
+            int scoreEn = scoreEnglish(plain);
+            int scoreUa = scoreUkrainian(plain);
+            int totalScore = Math.max(scoreEn, scoreUa);
+            String langGuess = scoreEn >= scoreUa ? "EN" : "UA";
+            Candidate c = new Candidate();
+            c.key = k;
+            c.plain = plain;
+            c.score = totalScore;
+            c.langGuess = langGuess;
+            candidates.add(c);
+        }
+        candidates.sort((a, b) -> Integer.compare(b.score, a.score));
+        Candidate best = candidates.get(0);
+        String newFileName = newNameFile(fileName, "BRUTEFORCED", best.key);
+        String newFilePath = newPathFile(filePath, newFileName);
+        try {
+            writeFile(newFilePath, best.plain);
+            System.out.println("Brute-force done. Best key: " + best.key + " (lang guess: " + best.langGuess + ")");
+            System.out.println("Saved to: " + newFilePath);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        System.out.println("Top candidates:");
+        for (int i = 0; i < Math.min(3, candidates.size()); i++) {
+            Candidate c = candidates.get(i);
+            System.out.println("Key=" + c.key + " score=" + c.score + " lang=" + c.langGuess);
+            System.out.println("--- snippet ---");
+            System.out.println(truncateForDisplay(c.plain, 400));
+            System.out.println("----------------");
+        }
+        run();
     }
-
+    private int scoreEnglish(String text) {
+        String[] commonEn = {" the ", " be ", " to ", " of ", " and ", " a ", " in ", " that ", " is ", " it ", " for ", " i ", " you ", " have "};
+        return countWordMatches(text.toLowerCase(), commonEn);
+    }
+    private int scoreUkrainian(String text) {
+        String[] commonUa = {" і ", " в ", " не ", " на ", " що ", " він ", " я ", " це ", " до ", " з ", " по "};
+        return countWordMatches(text.toLowerCase(), commonUa);
+    }
+    private int countWordMatches(String lowerText, String[] words) {
+        int score = 0;
+        for (String w : words) {
+            int idx = 0;
+            while ((idx = lowerText.indexOf(w, idx)) != -1) {
+                score += 10;
+                idx += w.length();
+            }
+        }
+        int letters = 0;
+        for (char c : lowerText.toCharArray()) if (Character.isLetter(c)) letters++;
+        if (lowerText.length() > 0) {
+            score += (letters * 1) / 100;
+        }
+        return score;
+    }
+    private String truncateForDisplay(String s, int max) {
+        if (s == null) return "";
+        if (s.length() <= max) return s;
+        return s.substring(0, max) + "...";
+    }
 }
