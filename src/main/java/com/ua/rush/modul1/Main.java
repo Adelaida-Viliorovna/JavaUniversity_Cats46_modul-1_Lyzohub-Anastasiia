@@ -6,6 +6,11 @@ import java.io.Reader;
 import java.util.Scanner;
 
 public class Main {
+    private final char[] UPPER_EN = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".toCharArray();
+    private final char[] LOWER_EN = "abcdefghijklmnopqrstuvwxyz".toCharArray();
+    private final char[] UPPER_UA = "АБВГҐДЕЄЖЗИІЇЙКЛМНОПРСТУФХЦЧШЩЬЮЯ".toCharArray();
+    private final char[] LOWER_UA = "абвгґдеєжзиіїйклмнопрстуфхцчшщьюя".toCharArray();
+    private final char[] PUNCTUATION = ".,«»\"':!? ".toCharArray();
     public static void main(String[] args) {
         new Main().run();
     }
@@ -54,7 +59,6 @@ public class Main {
                 run();
                 break;
         }
-
     }
     private int mainMenu() {
         System.out.println("Choose an option:");
@@ -121,36 +125,155 @@ public class Main {
         newFileName = name + "_" + operation + "." + extension;
         return newFileName;
     }
-    private void readFile(String filePath) throws IOException {
+    private String newPathFile(String filePath, String newFileName) {
+            if (filePath == null || filePath.isEmpty()) {
+                return newFileName;
+            }
+            int lastSlash = filePath.lastIndexOf('/');
+            int lastBackslash = filePath.lastIndexOf('\\');
+            int lastSep = Math.max(lastSlash, lastBackslash);
+            if (lastSep == -1) {
+                return newFileName;
+            }
+            String prefix = filePath.substring(0, lastSep + 1);
+            return prefix + newFileName;
+    }
+    private String readFile(String filePath) throws IOException {
         InputStream is = new FileInputStream(filePath);
         var data = is.readAllBytes();
         String text = new String(data);
-        System.out.println("File content: " + text);
         is.close();
+        return text;
+    }
+    private String shiftText(String text, int key) {
+        StringBuilder result = new StringBuilder();
+        for (char ch : text.toCharArray()) {
+            result.append(shiftChar(ch, key));
+        }
+        return result.toString();
+    }
+    private char shiftChar(char ch, int key) {
+        char[] alphabet = null;
+        if (Character.isUpperCase(ch)) {
+            if (contains(UPPER_EN, ch)) {
+                alphabet = UPPER_EN;
+            }
+            else if (contains(UPPER_UA, ch)) {
+                alphabet = UPPER_UA;
+            }
+        } else if (Character.isLowerCase(ch)) {
+            if (contains(LOWER_EN, ch)) {
+                alphabet = LOWER_EN;
+            }
+            else if (contains(LOWER_UA, ch)) {
+                alphabet = LOWER_UA;
+            }
+        } else if (contains(PUNCTUATION, ch)) {
+            alphabet = PUNCTUATION;
+        }
+        if (alphabet == null) {
+            return ch;
+        }
+        int index = indexOf(alphabet, ch);
+        int newIndex = (index + key) % alphabet.length;
+        if (newIndex < 0) {
+            newIndex += alphabet.length;
+        }
+        return alphabet[newIndex];
+    }
+    private boolean contains(char[] array, char ch) {
+        for (char c : array) {
+            if (c == ch) {
+                return true;
+            }
+        }
+        return false;
+    }
+    private int indexOf(char[] array, char ch) {
+        for (int i = 0; i < array.length; i++) {
+            if (array[i] == ch) {
+                return i;
+            }
+        }
+        return -1;
+    }
+    private void writeFile(String newFilePath, String newText) throws IOException {
+        OutputStream os = new FileOutputStream(newFilePath);
+        os.write(newText.getBytes());
+        os.close();
     }
     private void encryptMessage(String filePath, int key) {
         String fileName = entryFileInPath(filePath);
-        System.out.println("Encrypting file " + fileName + " at " + filePath + " with key " + key);
         String newFileName = newNameFile(fileName, "[ENCRYPTED]");
-        System.out.println("New file name: " + newFileName);
+        String newFilePath = newPathFile(filePath, newFileName);
+        String text = "";
         try {
-            readFile(filePath);
+            text = readFile(filePath);
+            System.out.println("File read successfully.");
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+        String newText = shiftText(text, key);
+        try {
+            writeFile(newFilePath, newText);
+            System.out.println("Encrypted successfully.");
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        System.out.println("------------------------------");
+        System.out.println("Encrypting file " + fileName + " at " + filePath + " with key " + key);
+        System.out.println("New file name: " + newFileName);
+        System.out.println("New file path: " + newFilePath);
+        System.out.println("File content: " + text);
+        System.out.println("Encrypted content: " + newText);
+        System.out.println("------------------------------");
+        run();
     }
     private void decryptMessage(String filePath, int key) {
         String fileName = entryFileInPath(filePath);
-        System.out.println("Decrypting file " + fileName + " at " + filePath + " with key " + key);
         String newFileName = newNameFile(fileName, "[DECRYPTED]");
+        String newFilePath = newPathFile(filePath, newFileName);
+        String text = "";
+        try {
+            text = readFile(filePath);
+            System.out.println("File read successfully.");
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        String newText = shiftText(text, -key);
+        try {
+            writeFile(newFilePath, newText);
+            System.out.println("Decrypted successfully.");
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        System.out.println("------------------------------");
+        System.out.println("Decrypting file " + fileName + " at " + filePath + " with key " + key);
         System.out.println("New file name: " + newFileName);
+        System.out.println("New file path: " + newFilePath);
+        System.out.println("File content: " + text);
+        System.out.println("Decrypted content: " + newText);
+        System.out.println("------------------------------");
+        run();
     }
     private void bruteForceDecryption(String filePath) {
         String fileName = entryFileInPath(filePath);
-        System.out.println("Brute force decrypting file " + fileName + " at " + filePath);
         int key = 0; // In a real scenario, this would be determined by the brute force process
         String newFileName = newNameFile(fileName, "[BRUTEFORCED]" + key);
+        String text = "";
+        try {
+            text = readFile(filePath);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        System.out.println("------------------------------");
+        System.out.println("Brute force decrypting file " + fileName + " at " + filePath);
         System.out.println("New file name: " + newFileName);
+        System.out.println("New file path: " + newPathFile(filePath, newFileName));
+        System.out.println("File content: " + text);
+
+        System.out.println("------------------------------");
+
     }
 
 }
