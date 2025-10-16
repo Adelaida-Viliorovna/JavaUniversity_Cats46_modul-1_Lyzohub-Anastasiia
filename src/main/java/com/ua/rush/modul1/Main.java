@@ -10,6 +10,8 @@ public class Main {
     private final char[] UPPER_UA = "АБВГҐДЕЄЖЗИІЇЙКЛМНОПРСТУФХЦЧШЩЬЮЯ".toCharArray();
     private final char[] LOWER_UA = "абвгґдеєжзиіїйклмнопрстуфхцчшщьюя".toCharArray();
     private final char[] PUNCTUATION = ".,«»\"':!? ".toCharArray();
+    private final String EXIT_TEXT = "Exiting...";
+    private final String FILE_READ_SUCCESS = "File read successfully.";
     public static void main(String[] args) {
         new Main().run();
     }
@@ -17,7 +19,7 @@ public class Main {
         Scanner scanner = new Scanner(System.in);
         String input = scanner.nextLine().trim();
         if(input.equalsIgnoreCase("exit")) {
-            System.out.println("Exiting...");
+            System.out.println(EXIT_TEXT);
             return;
         }
         if (!input.isEmpty()) {
@@ -92,7 +94,7 @@ public class Main {
                 bruteForceDecryption(filePath);
                 break;
             case 0:
-                System.out.println("Exiting...");
+                System.out.println(EXIT_TEXT);
                 break;
             default:
                 System.out.println("Invalid choice. Please try again.");
@@ -221,7 +223,7 @@ public class Main {
         String text = "";
         try {
             text = readFile(filePath);
-            System.out.println("File read successfully.");
+            System.out.println(FILE_READ_SUCCESS);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -248,7 +250,7 @@ public class Main {
         String text = "";
         try {
             text = readFile(filePath);
-            System.out.println("File read successfully.");
+            System.out.println(FILE_READ_SUCCESS);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -273,6 +275,7 @@ public class Main {
         String text = "";
         try {
             text = readFile(filePath);
+            System.out.println(FILE_READ_SUCCESS);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
