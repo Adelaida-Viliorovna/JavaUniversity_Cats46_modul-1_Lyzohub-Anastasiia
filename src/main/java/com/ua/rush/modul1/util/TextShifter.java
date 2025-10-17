@@ -94,13 +94,4 @@ public class TextShifter {
         return score;
     }
 
-    public String truncateForDisplay(String s, int max) {
-        if (s == null) {
-            return "";
-        }
-        if (s.length() <= max) {
-            return s;
-        }
-        return s.substring(0, max) + "...";
-    }
 }

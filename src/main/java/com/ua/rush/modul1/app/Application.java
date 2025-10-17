@@ -16,7 +16,7 @@ public class Application {
     private final Decryptor decryptor = new Decryptor(fileManager, textShifter);
     private final BruteForcer bruteForcer = new BruteForcer(fileManager, textShifter);
 
-    public final String EXIT_TEXT = "Exiting...";
+    public static final String EXIT_TEXT = "Exiting...";
     private boolean running = true;
 
     public void run() {
@@ -116,7 +116,6 @@ public class Application {
             case 0 -> {
                 System.out.println(EXIT_TEXT);
                 running = false;
-                return;
             }
             default -> System.out.println("Invalid choice.");
         }
