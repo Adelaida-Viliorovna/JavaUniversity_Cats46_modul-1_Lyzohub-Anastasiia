@@ -1,4 +1,0 @@
-There are two main types of random English text:
-placeholder text that mimics human writing but is meaningless,
-and true random text generated from a large corpus of words.
-Here are examples of both.

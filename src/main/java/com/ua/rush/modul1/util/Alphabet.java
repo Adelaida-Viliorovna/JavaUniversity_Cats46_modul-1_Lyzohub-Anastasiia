@@ -7,5 +7,5 @@ public final class Alphabet {
     public static final char[] LOWER_UA = "абвгґдеєжзиіїйклмнопрстуфхцчшщьюя".toCharArray();
     public static final char[] PUNCTUATION = ".,«»\"':!? ".toCharArray();
 
-    private Alphabet() { /* utility class */ }
+    public Alphabet() {}
 }
