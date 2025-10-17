@@ -1,71 +1,79 @@
 package com.ua.rush.modul1.io;
 
-import java.io.*;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.*;
 import java.util.Scanner;
 
 public class FileManager {
-    public final String FILE_READ_SUCCESS = "File read successfully.";
+    public static final String FILE_READ_SUCCESS = "File read successfully.";
+    private final Scanner scanner;
+
+    public FileManager(Scanner scanner) {
+        this.scanner = scanner;
+    }
 
     public String enterPath() {
         System.out.println("Enter path to the file:");
-        Scanner scanner = new Scanner(System.in);
-        return scanner.nextLine();
+        return scanner.nextLine().trim();
     }
+
     public int enterKey() {
         System.out.println("Enter key (integer):");
-        Scanner scanner = new Scanner(System.in);
-        return scanner.nextInt();
-    }
-    public String entryFileInPath(String filePath) {
-        String[] parts = filePath.split("/");
-        if (parts.length == 1) {
-            parts = filePath.split("\\\\");
+        while (true) {
+            String line = scanner.nextLine().trim();
+            try {
+                return Integer.parseInt(line);
+            }
+            catch (NumberFormatException e) {
+                System.out.println("Invalid integer. Try again:");
+            }
         }
-        return parts[parts.length - 1];
     }
+
+    public String entryFileInPath(String filePath) {
+        if (filePath == null || filePath.isEmpty()) {
+            return "";
+        }
+        Path p = Paths.get(filePath);
+        Path name = p.getFileName();
+        return name == null ? filePath : name.toString();
+    }
+
     public String newNameFile(String fileName, String operation, int key) {
         if (fileName == null || fileName.isEmpty()) {
             return "_[" + operation + "-" + key + "]";
         }
         int lastDot = fileName.lastIndexOf('.');
-        String base;
-        String ext;
-        if (lastDot == -1) {
-            base = fileName;
-            ext = "";
-        } else {
-            base = fileName.substring(0, lastDot);
-            ext = fileName.substring(lastDot);
-        }
+        String base = lastDot == -1 ? fileName : fileName.substring(0, lastDot);
+        String ext = lastDot == -1 ? "" : fileName.substring(lastDot);
         int lastOpStart = base.lastIndexOf("_[");
         if (lastOpStart != -1 && base.endsWith("]")) {
             base = base.substring(0, lastOpStart);
         }
         return base + "_[" + operation + "-" + key + "]" + ext;
     }
+
     public String newPathFile(String filePath, String newFileName) {
         if (filePath == null || filePath.isEmpty()) {
             return newFileName;
         }
-        int lastSlash = filePath.lastIndexOf('/');
-        int lastBackslash = filePath.lastIndexOf('\\');
-        int lastSep = Math.max(lastSlash, lastBackslash);
-        if (lastSep == -1) {
-            return newFileName;
-        }
-        String prefix = filePath.substring(0, lastSep + 1);
-        return prefix + newFileName;
+        Path p = Paths.get(filePath);
+        Path parent = p.getParent();
+        return parent == null ? newFileName : parent.resolve(newFileName).toString();
     }
+
     public String readFile(String filePath) throws IOException {
-        InputStream is = new FileInputStream(filePath);
-        var data = is.readAllBytes();
-        String text = new String(data);
-        is.close();
-        return text;
+        Path p = Paths.get(filePath);
+        return Files.readString(p, StandardCharsets.UTF_8);
     }
+
     public void writeFile(String newFilePath, String newText) throws IOException {
-        OutputStream os = new FileOutputStream(newFilePath);
-        os.write(newText.getBytes());
-        os.close();
+        Path p = Paths.get(newFilePath);
+        Path parent = p.getParent();
+        if (parent != null) {
+            Files.createDirectories(parent);
+        }
+        Files.writeString(p, newText == null ? "" : newText, StandardCharsets.UTF_8, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
     }
 }

@@ -1,60 +1,79 @@
 package com.ua.rush.modul1.util;
 
+import java.util.Locale;
+
 public class TextShifter {
-    private final Alphabet alph = new Alphabet(this);
+
     public String shiftText(String text, int key) {
-        StringBuilder result = new StringBuilder();
-        for (char ch : text.toCharArray()) {
-            result.append(shiftChar(ch, key));
+        if (text == null || text.isEmpty()) {
+            return "";
         }
-        return result.toString();
+        StringBuilder sb = new StringBuilder(text.length());
+        for (char ch : text.toCharArray()) {
+            sb.append(shiftChar(ch, key));
+        }
+        return sb.toString();
     }
+
     private char shiftChar(char ch, int key) {
         char[] alphabet = null;
         if (Character.isUpperCase(ch)) {
-            if (contains(alph.UPPER_EN, ch)) {
-                alphabet = alph.UPPER_EN;
+            if (contains(Alphabet.UPPER_EN, ch)) {
+                alphabet = Alphabet.UPPER_EN;
             }
-            else if (contains(alph.UPPER_UA, ch)) {
-                alphabet = alph.UPPER_UA;
+            else if (contains(Alphabet.UPPER_UA, ch)) {
+                alphabet = Alphabet.UPPER_UA;
             }
         } else if (Character.isLowerCase(ch)) {
-            if (contains(alph.LOWER_EN, ch)) {
-                alphabet = alph.LOWER_EN;
+            if (contains(Alphabet.LOWER_EN, ch)) {
+                alphabet = Alphabet.LOWER_EN;
             }
-            else if (contains(alph.LOWER_UA, ch)) {
-                alphabet = alph.LOWER_UA;
+            else if (contains(Alphabet.LOWER_UA, ch)) {
+                alphabet = Alphabet.LOWER_UA;
             }
-        } else if (contains(alph.PUNCTUATION, ch)) {
-            alphabet = alph.PUNCTUATION;
+        } else if (contains(Alphabet.PUNCTUATION, ch)) {
+            alphabet = Alphabet.PUNCTUATION;
         }
         if (alphabet == null) {
             return ch;
         }
-        int index = indexOf(alphabet, ch);
-        int newIndex = (index + key) % alphabet.length;
-        if (newIndex < 0) {
-            newIndex += alphabet.length;
+        int idx = indexOf(alphabet, ch);
+        if (idx < 0) {
+            return ch;
         }
-        return alphabet[newIndex];
+        int newIdx = Math.floorMod(idx + key, alphabet.length);
+        return alphabet[newIdx];
     }
-    private boolean contains(char[] array, char ch) {
-        for (char c : array) {
-            if (c == ch) {
+
+    private boolean contains(char[] arr, char c) {
+        for (char ch : arr) {
+            if (ch == c) {
                 return true;
             }
         }
         return false;
     }
-    private int indexOf(char[] array, char ch) {
-        for (int i = 0; i < array.length; i++) {
-            if (array[i] == ch) {
+
+    private int indexOf(char[] arr, char c) {
+        for (int i = 0; i < arr.length; i++) {
+            if (arr[i] == c) {
                 return i;
             }
         }
         return -1;
     }
-    protected int countWordMatches(String lowerText, String[] words) {
+
+    public int scoreEnglish(String text) {
+        String[] commonEn = {" the ", " be ", " to ", " of ", " and ", " a ", " in ", " that ", " is ", " it ", " for "};
+        return countWordMatches(text == null ? "" : text.toLowerCase(Locale.ROOT), commonEn);
+    }
+
+    public int scoreUkrainian(String text) {
+        String[] commonUa = {" і ", " в ", " не ", " на ", " що ", " він ", " я ", " це ", " до "};
+        return countWordMatches(text == null ? "" : text.toLowerCase(Locale.ROOT), commonUa);
+    }
+
+    public int countWordMatches(String lowerText, String[] words) {
         int score = 0;
         for (String w : words) {
             int idx = 0;
@@ -64,15 +83,24 @@ public class TextShifter {
             }
         }
         int letters = 0;
-        for (char c : lowerText.toCharArray()) if (Character.isLetter(c)) letters++;
-        if (lowerText.length() > 0) {
-            score += (letters * 1) / 100;
+        for (char c : lowerText.toCharArray()) {
+            if (Character.isLetter(c)) {
+                letters++;
+            }
+        }
+        if (!lowerText.isEmpty()) {
+            score += letters / 100;
         }
         return score;
     }
+
     public String truncateForDisplay(String s, int max) {
-        if (s == null) return "";
-        if (s.length() <= max) return s;
+        if (s == null) {
+            return "";
+        }
+        if (s.length() <= max) {
+            return s;
+        }
         return s.substring(0, max) + "...";
     }
 }
