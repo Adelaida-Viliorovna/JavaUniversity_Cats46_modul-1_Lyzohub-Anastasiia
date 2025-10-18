@@ -93,5 +93,4 @@ public class TextShifter {
         }
         return score;
     }
-
 }
