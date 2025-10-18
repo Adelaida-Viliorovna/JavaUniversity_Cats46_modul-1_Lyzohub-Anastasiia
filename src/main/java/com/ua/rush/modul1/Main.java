@@ -4,6 +4,6 @@ import com.ua.rush.modul1.app.Application;
 
 public class Main {
     public static void main(String[] args) {
-        new Application().run();
+        new Application(args).run();
     }
 }
