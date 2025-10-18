@@ -1,4 +1,4 @@
-package com.ua.rush.modul1;
+package com.ua.rush.modul1.oldFilesForMePersonally;
 
 import java.io.*;
 import java.util.Scanner;
